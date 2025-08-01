@@ -1,10 +1,9 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const API_BASE_URL = 'http://localhost:3000'; // Change this to your backend URL
-
+// Create axios instance
 const api = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: 'http://localhost:3000',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -13,7 +12,7 @@ const api = axios.create({
 // Request interceptor to add auth token
 api.interceptors.request.use(
   async (config) => {
-    const token = await AsyncStorage.getItem('authToken');
+    const token = await AsyncStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -29,22 +28,23 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     if (error.response?.status === 401) {
-      // Token expired or invalid, clear storage and redirect to login
-      await AsyncStorage.removeItem('authToken');
+      // Clear stored auth data on 401
+      await AsyncStorage.removeItem('token');
       await AsyncStorage.removeItem('user');
     }
     return Promise.reject(error);
   }
 );
 
+// Types
 export interface User {
   id: string;
   username: string;
   email: string;
-  dayStartTime: string;
   totalPoints: number;
   currentStreak: number;
   maxStreak: number;
+  dayStartTime: string;
 }
 
 export interface Task {
@@ -53,7 +53,6 @@ export interface Task {
   description?: string;
   difficulty: 'easy' | 'medium' | 'difficult';
   status: 'pending' | 'completed' | 'deleted';
-  recurrenceType: 'none' | 'daily' | 'weekly';
   dueDate?: string;
   completedAt?: string;
   reflectionNote?: string;
@@ -67,8 +66,6 @@ export interface CreateTaskDto {
   title: string;
   description?: string;
   difficulty: 'easy' | 'medium' | 'difficult';
-  recurrenceType?: 'none' | 'daily' | 'weekly';
-  recurrenceConfig?: any;
   dueDate?: string;
 }
 
@@ -88,8 +85,9 @@ export interface AuthResponse {
   token: string;
 }
 
+// Auth API
 export const authAPI = {
-  register: async (username: string, email: string, password: string, dayStartTime?: string): Promise<AuthResponse> => {
+  register: async (username: string, email: string, password: string, dayStartTime: string): Promise<AuthResponse> => {
     const response = await api.post('/auth/register', {
       username,
       email,
@@ -108,36 +106,35 @@ export const authAPI = {
   },
 };
 
+// Tasks API
 export const tasksAPI = {
   createTask: async (taskData: CreateTaskDto): Promise<Task> => {
     const response = await api.post('/tasks', taskData);
     return response.data;
   },
 
-  getUserTasks: async (status?: string): Promise<Task[]> => {
+  getTasks: async (status?: string): Promise<Task[]> => {
     const params = status ? { status } : {};
     const response = await api.get('/tasks', { params });
     return response.data;
   },
 
-  getTaskById: async (taskId: string): Promise<Task> => {
-    const response = await api.get(`/tasks/${taskId}`);
+  getTask: async (id: string): Promise<Task> => {
+    const response = await api.get(`/tasks/${id}`);
     return response.data;
   },
 
-  updateTask: async (taskId: string, taskData: UpdateTaskDto): Promise<Task> => {
-    const response = await api.put(`/tasks/${taskId}`, taskData);
+  updateTask: async (id: string, taskData: UpdateTaskDto): Promise<Task> => {
+    const response = await api.put(`/tasks/${id}`, taskData);
     return response.data;
   },
 
-  deleteTask: async (taskId: string): Promise<void> => {
-    await api.delete(`/tasks/${taskId}`);
+  deleteTask: async (id: string): Promise<void> => {
+    await api.delete(`/tasks/${id}`);
   },
 
-  completeTask: async (taskId: string, reflectionNote: string): Promise<Task> => {
-    const response = await api.post(`/tasks/${taskId}/complete`, {
-      reflectionNote,
-    });
+  completeTask: async (id: string, completeData: CompleteTaskDto): Promise<Task> => {
+    const response = await api.post(`/tasks/${id}/complete`, completeData);
     return response.data;
   },
 
@@ -147,10 +144,8 @@ export const tasksAPI = {
     return response.data;
   },
 
-  getWeeklyStats: async (): Promise<any[]> => {
+  getWeeklyStats: async (): Promise<any> => {
     const response = await api.get('/tasks/stats/weekly');
     return response.data;
   },
-};
-
-export default api; 
+}; 

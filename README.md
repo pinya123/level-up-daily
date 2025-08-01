@@ -1,272 +1,190 @@
 # Level Up Daily - Gamified Productivity App
 
-A mobile app designed for students and professionals who want to build effective habits, fight procrastination, and stay motivated through gamification and social competition.
+A mobile app designed for students and professionals who want to build effective habits, fight procrastination, and stay motivated. Users can log tasks with difficulty levels, earn points for timely completion, maintain streaks, receive personalized suggestions, and engage in friendly competition.
 
-## 🎯 Features
+## Features
 
-### Core Features
-- **Task Management**: Create, edit, and delete tasks with difficulty levels
-- **Gamification**: Earn points based on task difficulty and completion time
-- **Streak Tracking**: Build and maintain daily streaks for motivation
-- **Social Competition**: Compete with friends in 1:1 or group competitions (up to 5 users)
-- **Peer Review**: Suggest difficulty changes for friends' tasks to keep competitions fair
-- **Productivity Insights**: Data-driven suggestions to improve your productivity
+### Core Features (MVP)
+- ✅ **Task Management**: Create, edit, delete tasks with difficulty levels
+- ✅ **Gamification**: Points system based on difficulty and completion time
+- ✅ **Streak Tracking**: Daily streaks with maximum streak tracking
+- ✅ **Reflection System**: Mandatory reflection notes on task completion
+- ✅ **User Authentication**: Secure login/registration with JWT
+- ✅ **Dashboard**: Real-time stats and progress tracking
+- ✅ **Points Calculation**: Formula: `Points = Difficulty Points / max(hours since day start, 1)`
 
-### Technical Features
-- **Cross-platform**: React Native with Expo for iOS and Android
-- **Real-time Updates**: Live leaderboards and competition tracking
-- **Push Notifications**: Reminders for tasks, streaks, and competition updates
-- **Secure Authentication**: JWT-based authentication with secure token storage
-- **Offline Support**: Local caching with auto-resync upon reconnect
+### Planned Features
+- 🔄 **Competitions**: 1:1 and group competitions (up to 5 users)
+- 🔄 **Social Features**: Friend system and peer difficulty reviews
+- 🔄 **Recurring Tasks**: Daily/weekly recurring task support
+- 🔄 **Notifications**: Push reminders and streak alerts
+- 🔄 **Analytics**: 7-day trends and productivity insights
 
-## 🏗️ Architecture
+## Tech Stack
 
-### Backend (Node.js + Express + TypeScript)
-- **Database**: PostgreSQL with Prisma ORM
-- **Authentication**: JWT with bcrypt password hashing
-- **API**: RESTful API with comprehensive validation
-- **Real-time**: WebSocket support for live updates
+### Backend
+- **Framework**: NestJS (Node.js)
+- **Database**: PostgreSQL with TypeORM
+- **Authentication**: JWT with bcrypt
+- **Language**: TypeScript
 
-### Frontend (React Native + Expo + TypeScript)
-- **State Management**: Zustand for global state
-- **Data Fetching**: React Query for server state
-- **UI Components**: React Native Paper + custom components
-- **Navigation**: React Navigation v6
-- **Charts**: React Native Chart Kit for analytics
+### Frontend
+- **Framework**: React Native with Expo
+- **UI Library**: React Native Paper
+- **Navigation**: Expo Router
+- **State Management**: React Context
+- **Storage**: AsyncStorage
 
-## 🚀 Quick Start
+## Prerequisites
 
-### Prerequisites
-- Node.js 18+ 
-- PostgreSQL 14+
-- Expo CLI (`npm install -g @expo/cli`)
-- Git
+- Node.js (v18 or higher)
+- PostgreSQL (v12 or higher)
+- npm or yarn
+- Expo CLI (for mobile development)
 
-### 1. Clone and Setup
-```bash
-git clone <repository-url>
-cd level-up-daily
-npm run install:all
+## Setup Instructions
+
+### 1. Database Setup
+
+First, create a PostgreSQL database:
+
+```sql
+CREATE DATABASE level_up_daily;
 ```
 
-### 2. Database Setup
+### 2. Backend Setup
+
 ```bash
-# Create PostgreSQL database
-createdb level_up_daily
-
-# Copy environment file
-cp backend/env.example backend/.env
-
-# Edit backend/.env with your database credentials
-DATABASE_URL="postgresql://username:password@localhost:5432/level_up_daily"
-JWT_SECRET="your-super-secret-jwt-key-here"
-```
-
-### 3. Backend Setup
-```bash
+# Navigate to backend directory
 cd backend
+
+# Install dependencies
 npm install
-npx prisma generate
-npx prisma db push
-npm run dev
+
+# Create .env file (or copy from example)
+echo "DB_HOST=localhost
+DB_PORT=5432
+DB_USERNAME=postgres
+DB_PASSWORD=your_password
+DB_NAME=level_up_daily
+JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
+NODE_ENV=development" > .env
+
+# Start the development server
+npm run start:dev
 ```
 
-### 4. Frontend Setup
+The backend will be available at `http://localhost:3000`
+
+### 3. Frontend Setup
+
 ```bash
+# Navigate to frontend directory
 cd frontend
+
+# Install dependencies
 npm install
-npx expo start
+
+# Start the Expo development server
+npm start
 ```
 
-### 5. Mobile App
-- Install Expo Go on your phone
-- Scan the QR code from the terminal
-- Or run on simulator: `npx expo start --ios` or `npx expo start --android`
+### 4. Mobile App Setup
 
-## 📱 App Structure
+1. Install the Expo Go app on your mobile device
+2. Scan the QR code from the Expo development server
+3. The app will load on your device
 
-### Screens
-- **Authentication**: Login/Register with onboarding
-- **Dashboard**: Streak display, quick stats, recent tasks
-- **Tasks**: Full task management with filtering
-- **Competitions**: Create/join competitions, view leaderboards
-- **Profile**: User settings, friends, difficulty reviews
-
-### Key Components
-- **TaskCard**: Displays task with difficulty and completion status
-- **StreakCard**: Shows current streak with progress bar
-- **LeaderboardCard**: Competition rankings with real-time updates
-- **DifficultyChip**: Visual difficulty indicators with points
-- **ReflectionModal**: Mandatory reflection input for task completion
-
-## 🎮 Gamification System
-
-### Point Calculation
-```
-Points = (Difficulty Points) / max({hours since user's day start}, 1)
-```
-
-**Difficulty Points:**
-- Easy: 50 points
-- Medium: 70 points  
-- Hard: 100 points
-
-### Streak System
-- Track consecutive days with completed tasks
-- Reset streak if no task completed by end of day
-- Display current and maximum streaks
-
-### Competition Features
-- Create competitions with 1-5 participants
-- Set custom duration (days/weeks)
-- Real-time leaderboard updates
-- Peer difficulty review system
-- Fair play monitoring
-
-## 🔧 Development
-
-### Backend Development
-```bash
-cd backend
-npm run dev          # Start development server
-npm run build        # Build for production
-npx prisma studio    # Database GUI
-```
-
-### Frontend Development
-```bash
-cd frontend
-npm start            # Start Expo development server
-npm run ios          # Run on iOS simulator
-npm run android      # Run on Android emulator
-```
-
-### Database Migrations
-```bash
-cd backend
-npx prisma migrate dev    # Create and apply migration
-npx prisma db push        # Push schema changes
-npx prisma generate       # Generate Prisma client
-```
-
-### Testing
-```bash
-# Backend tests
-cd backend
-npm test
-
-# Frontend tests  
-cd frontend
-npm test
-```
-
-## 📊 API Endpoints
+## API Endpoints
 
 ### Authentication
-- `POST /api/auth/register` - User registration
-- `POST /api/auth/login` - User login
-- `GET /api/auth/profile` - Get user profile
-- `PUT /api/auth/profile` - Update profile
+- `POST /auth/register` - User registration
+- `POST /auth/login` - User login
 
 ### Tasks
-- `GET /api/tasks` - Get user tasks
-- `POST /api/tasks` - Create new task
-- `PUT /api/tasks/:id` - Update task
-- `POST /api/tasks/:id/complete` - Complete task
-- `DELETE /api/tasks/:id` - Delete task
-- `GET /api/tasks/stats` - Get task statistics
+- `GET /tasks` - Get user tasks
+- `POST /tasks` - Create new task
+- `PUT /tasks/:id` - Update task
+- `DELETE /tasks/:id` - Delete task
+- `POST /tasks/:id/complete` - Complete task with reflection
+- `GET /tasks/stats/daily` - Get daily statistics
+- `GET /tasks/stats/weekly` - Get weekly statistics
 
-### Competitions
-- `GET /api/competitions` - Get user competitions
-- `POST /api/competitions` - Create competition
-- `GET /api/competitions/:id` - Get competition details
-- `POST /api/competitions/:id/join` - Join competition
-- `GET /api/competitions/:id/leaderboard` - Get leaderboard
+## Points System
 
-### Users & Social
-- `GET /api/users/search` - Search users
-- `POST /api/users/friend-request` - Send friend request
-- `GET /api/users/friends` - Get friends list
-- `POST /api/users/difficulty-review` - Submit difficulty review
-- `GET /api/users/suggestions` - Get productivity suggestions
+### Difficulty Points
+- **Easy**: 50 points
+- **Medium**: 70 points  
+- **Difficult**: 100 points
 
-## 🚀 Deployment
-
-### Backend Deployment (Vercel)
-```bash
-cd backend
-npm run build
-vercel --prod
+### Points Calculation
+```
+Points = Difficulty Points / max(hours since day start, 1)
 ```
 
-### Frontend Deployment (Expo)
-```bash
-cd frontend
-eas build --platform all
-eas submit --platform all
-```
+This encourages early task completion and rewards users for completing tasks closer to their day start time.
 
-### Database (Supabase)
-1. Create Supabase project
-2. Update DATABASE_URL in backend/.env
-3. Run migrations: `npx prisma db push`
+## User Experience
 
-## 📈 Analytics & Monitoring
+### Onboarding
+1. User registers with username, email, password, and day start time
+2. Guided through first task creation
+3. Brief explanation of points system and streaks
 
-### Key Metrics
-- Daily Active Users (DAU)
-- Task completion rate
-- Average streak length
-- Competition participation
-- User retention (D1, D7, D30)
+### Daily Workflow
+1. **Dashboard**: View stats, streaks, and pending tasks
+2. **Add Tasks**: Quick task creation with difficulty selection
+3. **Complete Tasks**: Mark tasks complete with mandatory reflection
+4. **Track Progress**: Real-time points and streak updates
 
-### Monitoring
-- API response times
-- Error rates
-- Database performance
-- Push notification delivery
+### Gamification Elements
+- **Streaks**: Consecutive days with completed tasks
+- **Points**: Earned based on difficulty and timing
+- **Progress Tracking**: Visual representation of daily/weekly progress
+- **Achievements**: Streak milestones and point thresholds
 
-## 🔒 Security
+## Development Roadmap
 
-### Authentication
-- JWT tokens with 7-day expiration
-- Secure token storage using Expo SecureStore
-- Password hashing with bcrypt
+### Phase 1: Core Infrastructure ✅
+- Database models and relationships
+- Authentication system
+- Basic task CRUD operations
+- Points calculation engine
 
-### Data Protection
-- Input validation on all endpoints
-- SQL injection prevention with Prisma
-- CORS configuration
-- Rate limiting
+### Phase 2: Gamification Engine ✅
+- Streak tracking
+- Points calculation
+- User statistics
+- Dashboard implementation
 
-### Privacy
-- GDPR-compliant data handling
-- User data export/deletion
-- End-to-end encryption for sensitive data
+### Phase 3: Social Features (Next)
+- User search and friend system
+- Competition creation and management
+- Peer difficulty reviews
+- Leaderboards
 
-## 🤝 Contributing
+### Phase 4: Advanced Features
+- Recurring tasks
+- Push notifications
+- Analytics and insights
+- Mobile optimizations
+
+## Contributing
 
 1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
 
-## 📄 License
+## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+MIT License - see LICENSE file for details
 
-## 🙏 Acknowledgments
+## Support
 
-- React Native community for the excellent framework
-- Expo team for the amazing development tools
-- Prisma team for the type-safe database ORM
-- React Query team for the powerful data fetching library
-
-## 📞 Support
-
-For support, email support@levelupdaily.com or join our Discord community.
+For questions or support, please open an issue on GitHub.
 
 ---
 
-**Built with ❤️ for productive people everywhere** 
+**Built with ❤️ for productivity enthusiasts** 

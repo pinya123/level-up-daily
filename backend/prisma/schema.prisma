@@ -1,0 +1,164 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  email     String   @unique
+  password  String
+  dayStart  Int      @default(6) // Hour of day (0-23)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Tasks
+  tasks Task[]
+
+  // Streaks
+  currentStreak Int @default(0)
+  maxStreak     Int @default(0)
+  lastTaskDate  DateTime?
+
+  // Friendships
+  sentFriendRequests     Friendship[] @relation("UserSentRequests")
+  receivedFriendRequests Friendship[] @relation("UserReceivedRequests")
+
+  // Competitions
+  createdCompetitions Competition[] @relation("CompetitionCreator")
+  competitionMembers CompetitionMember[]
+
+  // Difficulty reviews
+  sentReviews     DifficultyReview[] @relation("ReviewSender")
+  receivedReviews DifficultyReview[] @relation("ReviewReceiver")
+
+  @@map("users")
+}
+
+model Task {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  difficulty  Difficulty
+  points      Int
+  isRecurring Boolean  @default(false)
+  recurrence  RecurrenceType?
+  dueTime     DateTime?
+  completedAt DateTime?
+  reflection  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Competitions
+  competitionId String?
+  competition   Competition? @relation(fields: [competitionId], references: [id])
+
+  // Difficulty reviews
+  difficultyReviews DifficultyReview[]
+
+  @@map("tasks")
+}
+
+model Friendship {
+  id        String   @id @default(cuid())
+  status    FriendshipStatus @default(PENDING)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  senderId   String
+  sender     User   @relation("UserSentRequests", fields: [senderId], references: [id], onDelete: Cascade)
+  receiverId String
+  receiver   User   @relation("UserReceivedRequests", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  @@unique([senderId, receiverId])
+  @@map("friendships")
+}
+
+model Competition {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  startDate   DateTime
+  endDate     DateTime
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  creatorId String
+  creator   User   @relation("CompetitionCreator", fields: [creatorId], references: [id])
+  members   CompetitionMember[]
+  tasks     Task[]
+
+  @@map("competitions")
+}
+
+model CompetitionMember {
+  id        String   @id @default(cuid())
+  joinedAt  DateTime @default(now())
+  totalPoints Int @default(0)
+
+  // Relations
+  competitionId String
+  competition   Competition @relation(fields: [competitionId], references: [id], onDelete: Cascade)
+  userId       String
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([competitionId, userId])
+  @@map("competition_members")
+}
+
+model DifficultyReview {
+  id        String   @id @default(cuid())
+  suggestedDifficulty Difficulty
+  reason    String?
+  status    ReviewStatus @default(PENDING)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  taskId String
+  task   Task   @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  senderId String
+  sender   User   @relation("ReviewSender", fields: [senderId], references: [id], onDelete: Cascade)
+  receiverId String
+  receiver User   @relation("ReviewReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  @@map("difficulty_reviews")
+}
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+enum RecurrenceType {
+  DAILY
+  WEEKLY
+  MONTHLY
+}
+
+enum FriendshipStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+enum ReviewStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+} 

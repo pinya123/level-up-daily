@@ -31,8 +31,11 @@ export default function ProfileScreen() {
           onPress: async () => {
             try {
               await logout();
+              console.log('✅ Logout successful');
+              // The layout will automatically redirect to login screen
             } catch (error) {
-              console.error('Logout error:', error);
+              console.error('❌ Logout error:', error);
+              Alert.alert('Error', 'Failed to logout. Please try again.');
             }
           },
         },

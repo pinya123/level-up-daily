@@ -3,6 +3,7 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { PaperProvider } from 'react-native-paper';
 import { AuthProvider, useAuth } from '../src/contexts/AuthContext';
+import { AuthGuard } from '../src/components/AuthGuard';
 import { ThemedView } from '../components/ThemedView';
 
 function RootLayoutNav() {
@@ -19,13 +20,34 @@ function RootLayoutNav() {
   return (
     <Stack>
       {user ? (
-        // Authenticated user - show main app
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        // Authenticated user - show main app with AuthGuard
+        <Stack.Screen 
+          name="(tabs)" 
+          options={{ 
+            headerShown: false,
+            // Prevent going back to auth screens
+            gestureEnabled: false,
+          }} 
+        />
       ) : (
         // Unauthenticated user - show auth screens
         <>
-          <Stack.Screen name="auth/login" options={{ headerShown: false }} />
-          <Stack.Screen name="auth/register" options={{ headerShown: false }} />
+          <Stack.Screen 
+            name="auth/login" 
+            options={{ 
+              headerShown: false,
+              // Prevent going back to main app
+              gestureEnabled: false,
+            }} 
+          />
+          <Stack.Screen 
+            name="auth/register" 
+            options={{ 
+              headerShown: false,
+              // Prevent going back to main app
+              gestureEnabled: false,
+            }} 
+          />
         </>
       )}
     </Stack>

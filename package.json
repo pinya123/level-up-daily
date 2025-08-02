@@ -4,13 +4,17 @@
   "description": "Gamified Productivity App",
   "main": "index.js",
   "scripts": {
-    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev": "concurrently --kill-others --prefix \"[{name}]\" --names \"backend,frontend\" \"npm run dev:backend\" \"npm run dev:frontend\"",
     "dev:backend": "cd backend && npm run dev",
     "dev:frontend": "cd frontend && npm start",
+    "dev:backend-only": "cd backend && npm run dev",
+    "dev:frontend-only": "cd frontend && npm start",
     "build": "npm run build:backend && npm run build:frontend",
     "build:backend": "cd backend && npm run build",
     "build:frontend": "cd frontend && npm run build",
-    "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install"
+    "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install",
+    "clean": "cd backend && npm run build && cd ../frontend && npm run build",
+    "reset": "npm run clean && npm run install:all"
   },
   "keywords": ["productivity", "gamification", "mobile", "react-native"],
   "author": "Your Name",

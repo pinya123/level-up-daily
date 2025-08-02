@@ -1,37 +1,92 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
 
-// Create axios instance
+// Determine the correct base URL based on platform
+const getBaseURL = () => {
+  if (Platform.OS === 'web') {
+    return 'http://localhost:3000';
+  } else if (Platform.OS === 'android') {
+    return 'http://10.0.2.2:3000'; // Android emulator
+  } else {
+    return 'http://localhost:3000'; // iOS simulator
+  }
+};
+
+// Create axios instance with correct base URL for development
 const api = axios.create({
-  baseURL: 'http://localhost:3000',
+  baseURL: getBaseURL(),
   headers: {
     'Content-Type': 'application/json',
   },
+  timeout: 10000, // 10 second timeout
 });
+
+console.log('🌐 API Base URL:', getBaseURL());
+console.log('📱 Platform:', Platform.OS);
 
 // Request interceptor to add auth token
 api.interceptors.request.use(
   async (config) => {
-    const token = await AsyncStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    console.log('🚀 API Request:', config.method?.toUpperCase(), config.url);
+    console.log('📦 Request Data:', config.data);
+    console.log('🌐 Base URL:', config.baseURL);
+    
+    const accessToken = await AsyncStorage.getItem('accessToken');
+    if (accessToken) {
+      config.headers.Authorization = `Bearer ${accessToken}`;
     }
     return config;
   },
   (error) => {
+    console.error('❌ Request Error:', error);
     return Promise.reject(error);
   }
 );
 
-// Response interceptor to handle auth errors
+// Response interceptor to handle auth errors and token refresh
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    console.log('✅ API Response:', response.status, response.config.url);
+    console.log('📦 Response Data:', response.data);
+    return response;
+  },
   async (error) => {
-    if (error.response?.status === 401) {
-      // Clear stored auth data on 401
-      await AsyncStorage.removeItem('token');
-      await AsyncStorage.removeItem('user');
+    console.error('❌ Response Error:', error.response?.status, error.config?.url);
+    console.error('📦 Error Data:', error.response?.data);
+    console.error('🔗 Network Error:', error.message);
+    
+    const originalRequest = error.config;
+
+    // If 401 and we haven't tried to refresh yet
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+
+      try {
+        const refreshToken = await AsyncStorage.getItem('refreshToken');
+        if (refreshToken) {
+          const response = await axios.post(`${getBaseURL()}/auth/refresh`, {
+            refreshToken,
+          });
+
+          const { accessToken, refreshToken: newRefreshToken } = response.data;
+          
+          await AsyncStorage.setItem('accessToken', accessToken);
+          await AsyncStorage.setItem('refreshToken', newRefreshToken);
+
+          // Retry the original request with new token
+          originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+          return api(originalRequest);
+        }
+      } catch (refreshError) {
+        console.error('❌ Token refresh failed:', refreshError);
+        // Clear all auth data on refresh failure
+        await AsyncStorage.removeItem('accessToken');
+        await AsyncStorage.removeItem('refreshToken');
+        await AsyncStorage.removeItem('user');
+      }
     }
+
     return Promise.reject(error);
   }
 );
@@ -45,6 +100,8 @@ export interface User {
   currentStreak: number;
   maxStreak: number;
   dayStartTime: string;
+  lastLoginAt?: Date;
+  createdAt?: Date;
 }
 
 export interface Task {
@@ -82,27 +139,92 @@ export interface CompleteTaskDto {
 
 export interface AuthResponse {
   user: User;
-  token: string;
+  tokens: {
+    accessToken: string;
+    refreshToken: string;
+    expiresIn: number;
+  };
+}
+
+export interface TokenResponse {
+  accessToken: string;
+  refreshToken: string;
+  expiresIn: number;
 }
 
 // Auth API
 export const authAPI = {
   register: async (username: string, email: string, password: string, dayStartTime: string): Promise<AuthResponse> => {
-    const response = await api.post('/auth/register', {
-      username,
-      email,
-      password,
-      dayStartTime,
-    });
-    return response.data;
+    console.log('🔐 Registering user:', { username, email, dayStartTime });
+    
+    try {
+      const response = await api.post('/auth/register', {
+        username,
+        email,
+        password,
+        dayStartTime,
+      });
+      
+      console.log('✅ Registration successful:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ Registration failed:', error);
+      throw error;
+    }
   },
 
   login: async (username: string, password: string): Promise<AuthResponse> => {
-    const response = await api.post('/auth/login', {
-      username,
-      password,
-    });
-    return response.data;
+    console.log('🔐 Logging in user:', { username });
+    
+    try {
+      const response = await api.post('/auth/login', {
+        username,
+        password,
+      });
+      
+      console.log('✅ Login successful:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ Login failed:', error);
+      throw error;
+    }
+  },
+
+  refreshToken: async (refreshToken: string): Promise<TokenResponse> => {
+    try {
+      const response = await api.post('/auth/refresh', { refreshToken });
+      return response.data;
+    } catch (error) {
+      console.error('❌ Token refresh failed:', error);
+      throw error;
+    }
+  },
+
+  logout: async (): Promise<void> => {
+    try {
+      await api.post('/auth/logout');
+      await AsyncStorage.removeItem('accessToken');
+      await AsyncStorage.removeItem('refreshToken');
+      await AsyncStorage.removeItem('user');
+    } catch (error) {
+      console.error('❌ Logout failed:', error);
+      // Clear local storage even if API call fails
+      await AsyncStorage.removeItem('accessToken');
+      await AsyncStorage.removeItem('refreshToken');
+      await AsyncStorage.removeItem('user');
+    }
+  },
+
+  changePassword: async (currentPassword: string, newPassword: string): Promise<void> => {
+    try {
+      await api.post('/auth/change-password', {
+        currentPassword,
+        newPassword,
+      });
+    } catch (error) {
+      console.error('❌ Password change failed:', error);
+      throw error;
+    }
   },
 };
 

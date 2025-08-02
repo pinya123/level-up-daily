@@ -21,6 +21,7 @@ export default function LoginScreen() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
   const { login } = useAuth();
 
   const handleLogin = async () => {
@@ -32,11 +33,12 @@ export default function LoginScreen() {
     setIsLoading(true);
     try {
       await login(username.trim(), password);
+      console.log('✅ Login successful');
+      // The layout will automatically redirect to the main app
     } catch (error: any) {
-      Alert.alert(
-        'Login Failed',
-        error.response?.data?.message || 'Invalid credentials'
-      );
+      console.error('❌ Login failed:', error);
+      const errorMessage = error.response?.data?.message || error.message || 'Login failed';
+      Alert.alert('Login Error', errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -66,6 +68,7 @@ export default function LoginScreen() {
                 style={styles.input}
                 autoCapitalize="none"
                 autoCorrect={false}
+                disabled={isLoading}
               />
 
               <TextInput
@@ -76,6 +79,7 @@ export default function LoginScreen() {
                 style={styles.input}
                 secureTextEntry
                 autoCapitalize="none"
+                disabled={isLoading}
               />
 
               <Button

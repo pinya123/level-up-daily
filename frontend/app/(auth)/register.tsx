@@ -25,25 +25,30 @@ export default function RegisterScreen() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [dayStartTime, setDayStartTime] = useState('09:00');
   const [isLoading, setIsLoading] = useState(false);
+
   const { register } = useAuth();
 
   const validateForm = () => {
     if (!username.trim() || !email.trim() || !password || !confirmPassword) {
+      console.log('Error', 'Please fill in all fields');
       Alert.alert('Error', 'Please fill in all fields');
       return false;
     }
 
     if (password !== confirmPassword) {
+      console.log('Error', 'Passwords do not match');
       Alert.alert('Error', 'Passwords do not match');
       return false;
     }
 
     if (password.length < 6) {
+      console.log('Error', 'Password must be at least 6 characters long');
       Alert.alert('Error', 'Password must be at least 6 characters long');
       return false;
     }
 
     if (!email.includes('@')) {
+      console.log('Error', 'Please enter a valid email address');
       Alert.alert('Error', 'Please enter a valid email address');
       return false;
     }
@@ -55,13 +60,40 @@ export default function RegisterScreen() {
     if (!validateForm()) return;
 
     setIsLoading(true);
+    console.log(isLoading);
     try {
+      console.log('Attempting to register with:', {
+        username: username.trim(),
+        email: email.trim(),
+        password: password.length,
+        dayStartTime,
+      });
+
       await register(username.trim(), email.trim(), password, dayStartTime);
+      
+      console.log('Registration successful!');
+      // The layout will automatically redirect to the main app
+      
     } catch (error: any) {
-      Alert.alert(
-        'Registration Failed',
-        error.response?.data?.message || 'Registration failed'
-      );
+      console.error('Registration error:', error);
+      
+      let errorMessage = 'Registration failed';
+      
+      if (error.response) {
+        // Server responded with error
+        console.error('Server error:', error.response.data);
+        errorMessage = error.response.data?.message || error.response.data?.error || 'Server error';
+      } else if (error.request) {
+        // Network error
+        console.error('Network error:', error.request);
+        errorMessage = 'Network error - please check your connection';
+      } else {
+        // Other error
+        console.error('Other error:', error.message);
+        errorMessage = error.message || 'Unknown error occurred';
+      }
+      
+      Alert.alert('Registration Failed', errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -91,6 +123,7 @@ export default function RegisterScreen() {
                 style={styles.input}
                 autoCapitalize="none"
                 autoCorrect={false}
+                disabled={isLoading}
               />
 
               <TextInput
@@ -102,6 +135,7 @@ export default function RegisterScreen() {
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoCorrect={false}
+                disabled={isLoading}
               />
 
               <TextInput
@@ -112,6 +146,7 @@ export default function RegisterScreen() {
                 style={styles.input}
                 secureTextEntry
                 autoCapitalize="none"
+                disabled={isLoading}
               />
 
               <TextInput
@@ -122,6 +157,7 @@ export default function RegisterScreen() {
                 style={styles.input}
                 secureTextEntry
                 autoCapitalize="none"
+                disabled={isLoading}
               />
 
               <Text variant="bodyMedium" style={styles.label}>
@@ -145,7 +181,7 @@ export default function RegisterScreen() {
                 disabled={isLoading}
                 style={styles.button}
               >
-                Create Account
+                {isLoading ? 'Creating Account...' : 'Create Account'}
               </Button>
             </Card.Content>
           </Card>

@@ -45,6 +45,9 @@ export class User {
   @Column({ type: 'date', nullable: true })
   lastTaskDate: Date; // Last date when user completed a task
 
+  @Column({ type: 'timestamp', nullable: true })
+  lastLoginAt: Date;
+
   @Column({ type: 'jsonb', default: [] })
   pointsHistory: number[]; // Last 7 days of points for trend calculation
 
